@@ -7,3 +7,5 @@ class ApiResponse {
     // 6:15:00 first put all the code of 'ApiResponse.js' and 'ApiError.js' into chatGPT and understand the code
   }
 }
+
+export {ApiResponse}
