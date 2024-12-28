@@ -8,25 +8,32 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET, // Click 'View API Keys' above to copy your API secret
 });
 
+const uploadOnCloudinary = async (localFilePath) => {
+  try {
+    if (!localFilePath) return null;
 
-const uploadOnCloudinary = async (localFilePath) =>{
+    // upload the file on cloudinary
+    const response = await cloudinary.uploader.upload(localFilePath, {
+      resource_type: "auto",
+    });
+    // file has been uploaded successfull
+    // console.log("response -> ",response);
+    fs.unlinkSync(localFilePath);
+    return response;
+  } catch (error) {
+    fs.unlinkSync(localFilePath); // remove the locally saved temporary file
+    // ONLY HAVA TESTING LAST PART OF VIDEO
+    return null;
+  }
+};
+const deleteFromCloudinary = async (localFilePath) => {
+  try {
+    if (!localFilePath) return null;
+    // Delete the user's previous avatar from Cloudinary
+      await cloudinary.uploader.destroy(localFilePath);
+  } catch (error) {
+   console.log("not delete file from cloudinary" ,error.message) 
+  }
+};
 
-    try {
-        if(!localFilePath) return null
-
-        // upload the file on cloudinary
-        const response = await cloudinary.uploader.upload(localFilePath,{
-            resource_type:"auto"
-        })
-        // file has been uploaded successfull
-       // console.log("response -> ",response);
-        fs.unlinkSync(localFilePath)
-        return response;
-    } catch (error) {
-        fs.unlinkSync(localFilePath) // remove the locally saved temporary file 
-        // ONLY HAVA TESTING LAST PART OF VIDEO
-        return null
-    }
-}
-
-export default uploadOnCloudinary;
+export  {uploadOnCloudinary,deleteFromCloudinary};
