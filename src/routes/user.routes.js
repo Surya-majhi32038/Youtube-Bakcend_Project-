@@ -16,7 +16,7 @@ router.route("/login").post(loginUser);
 
 // secured route
 router.route("/logout").post(verifyJWT,logoutUser); // verifyJWT is a middleware to verify the token
-router.route("/refresh-token").post(refreshAccessToken); 
+router.route("/refresh-token").post(refreshAccessToken); // 2:51:51
 router.route("/updateUserAvatar").post(
   upload.fields([{ name: "avatar", maxCount: 1 }]),
   updateUserAvatar

@@ -30,7 +30,7 @@ const deleteFromCloudinary = async (localFilePath) => {
   try {
     if (!localFilePath) return null;
     // Delete the user's previous avatar from Cloudinary
-      await cloudinary.uploader.destroy(localFilePath);
+    await cloudinary.uploader.destroy(localFilePath);
   } catch (error) {
    console.log("not delete file from cloudinary" ,error.message) 
   }
