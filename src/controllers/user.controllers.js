@@ -59,9 +59,9 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new ApiError(400, "User with email and username  already exists");
     }
 
+      console.log("reqested files ->",req.files);
     const avatarLocalPath = req.files?.avatar[0]?.path;
     // ONLY TESTING
-    //  console.log("reqested files ->",req.files);
     const coverImageLocalPath = req.files?.coverImage[0]?.path;
 
     if (!avatarLocalPath) {
@@ -111,16 +111,16 @@ const loginUser = asyncHandler(async (req, res) => {
 
     const { username, email, password } = req.body;
 
-    //console.log(username,email);
     // check if user already exists: username, email
     if (!(username || email)) {
         throw new ApiError(400, "Please provide username or email");
     }
-
+    // console.log(await bcrypt.hash(password,10))
     // check user or email exists
     const user = await User.findOne({
         $or: [{ username }, { email }],
     });
+  //  console.log(user);
     if (!user) {
         throw new ApiError(404, "user does not exists");
     }
@@ -163,7 +163,7 @@ const loginUser = asyncHandler(async (req, res) => {
 });
 
 const logoutUser = asyncHandler(async (req, res) => {
-    await User.findByIdAndUpdate(
+     await User.findByIdAndUpdate(
         req.user._id,
         {
             $set: {
@@ -198,7 +198,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
             process.env.REFRESH_TOKEN_SECRET
         );
         const user = await User.findById(decoded_Token?._id);
-
+       // console.log(user)
         if (!user) {
             throw new ApiError(401, "Invaild refresh token ");
         }
@@ -234,7 +234,9 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
 const changeCurrentPassword = asyncHandler(async (req, res) => {
     const { oldPassword, newPassword } = req.body;
-    const user = await User.findById(req.user?._id);
+    //console.log(oldPassword,newPassword,req.user._conditions)
+    const user = await User.findById(req.user?._conditions._id);
+   // console.log(req.user?._conditions._id) 
     const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
 
     if (!isPasswordCorrect) {
@@ -248,10 +250,15 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
         .status(200)
         .json(new ApiResponse(200, {}, "Password Change Successfully"));
 });
+
+
 const getCurrentUser = asyncHandler(async (req, res) => {
+
+    const user = await User.findById(req.user._conditions._id)
+   // console.log(user)
     return res
         .status(200)
-        .json(new ApiResponse(200, req.user, "Current User fetched successfully "));
+        .json(new ApiResponse(200, user.toObject(), "Current User fetched successfully "));
 });
 
 const updateAccountDetails = asyncHandler(async (req, res) => {
@@ -261,7 +268,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
     }
 
     const user = await User.findByIdAndUpdate(
-        req.user?._id,
+        req.user?._conditions._id,
         {
             $set: {
                 fullName,
@@ -277,21 +284,22 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
 });
 
 const updateUserAvatar = asyncHandler(async (req, res) => {
-    const avatarLocalPath = req.files?.avatar[0].path;
+    const avatarLocalPath = req.file?.path;
 
     if (!avatarLocalPath) {
         throw new ApiError(400, "Avatar file is missing ");
     }
 
     const avatar = await uploadOnCloudinary(avatarLocalPath);
-
-    await deleteFromCloudinary(avatarLocalPath);
+   const users = await User.findById(req.user._conditions._id)
+   console.log(users)
+   await deleteFromCloudinary(users.avatar);
     if (!avatar.url) {
         throw new ApiError(400, "Error while uploading on avatar ");
     }
-
+  //  console.log(req.user._conditions._id)
     const user = await User.findByIdAndUpdate(
-        req.user?._id,
+        req.user._conditions._id,
         {
             $set: {
                 avatar: avatar.url,
@@ -313,7 +321,9 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
     if (!coverImageLocalPath) {
         throw new ApiError(400, "Cover Image  file is missing ");
     }
-
+    const users = await User.findById(req.user._conditions._id)
+   // console.log(users)
+   await deleteFromCloudinary(users.coverImage);
     const coverImage = await uploadOnCloudinary(coverImageLocalPath);
 
     if (!coverImage.url) {
@@ -321,7 +331,7 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
     }
 
     const user = await User.findByIdAndUpdate(
-        req.user?._id,
+        req.user?._conditions._id,
         {
             $set: {
                 coverImage: coverImage.url,
@@ -374,7 +384,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
                 },
                 isSubscribed: {
                     $cond: {
-                        if: { $in: [req.user ? _id, "$subscribers.subscriber"] },
+                        if: { $in: [req.user?._id, "$subscribers.subscriber"] },
                         then: true,
                         else: false
                     }
