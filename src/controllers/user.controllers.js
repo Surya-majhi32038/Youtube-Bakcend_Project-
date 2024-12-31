@@ -349,6 +349,8 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
 
 const getUserChannelProfile = asyncHandler(async (req, res) => {
     const { username } = req.params;
+    //console.log(req.user._conditions._id); 
+    
     if (!username?.trim()) {
         throw new ApiError(400, "username name not found");
     }
@@ -384,7 +386,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
                 },
                 isSubscribed: {
                     $cond: {
-                        if: { $in: [req.user?._id, "$subscribers.subscriber"] },
+                        if: { $in: [req.user?._conditions._id, "$subscribers.subscriber"] },
                         then: true,
                         else: false
                     }
@@ -426,7 +428,7 @@ const getWatchHistory = asyncHandler(async (req, res) => {
     const user = await User.aggregate([
         {
             $match: {
-                _id: new mongoose.Types.ObjectId(req.user._id)
+                _id: new mongoose.Types.ObjectId(req.user._conditions._id)
             }
         },
         {

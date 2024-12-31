@@ -8,7 +8,9 @@ import {
     changeCurrentPassword,
     getCurrentUser,
     updateAccountDetails,
-    updateUserCoverImage
+    updateUserCoverImage,
+    getUserChannelProfile,
+    getWatchHistory
 } from "../controllers/user.controllers.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/Auth.middlewares.js";
@@ -44,5 +46,8 @@ router.route("/update-account").patch(verifyJWT, updateAccountDetails); // passe
 
 router.route("/cover-image").patch(verifyJWT, upload.single("coverImage"), updateUserCoverImage) // passed 
 
+router.route("/c/:username").get(verifyJWT, getUserChannelProfile) // passed 
+
+router.route("/history").get(verifyJWT, getWatchHistory) // passed 10:40 MongoDB models for linkes ans playlist 
 
 export default router;
