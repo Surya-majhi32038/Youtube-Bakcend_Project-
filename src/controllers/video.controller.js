@@ -1,6 +1,6 @@
 import mongoose, {isValidObjectId} from "mongoose"
-import {Video} from "../models/video.model.js"
-import {User} from "../models/user.model.js"
+import {Video} from "../models/video.models.js"
+import {User} from "../models/user.models.js"
 import {ApiError} from "../utils/ApiError.js"
 import {ApiResponse} from "../utils/ApiResponse.js"
 import {asyncHandler} from "../utils/asyncHandler.js"
@@ -15,6 +15,28 @@ const getAllVideos = asyncHandler(async (req, res) => {
 const publishAVideo = asyncHandler(async (req, res) => {
     const { title, description} = req.body
     // TODO: get video, upload to cloudinary, create video
+    const videoLocalPath = req.files.videoFile[0].path
+    const thumbnailLocalPath = req.files.thumbnail[0].path
+
+    if(!(title || description || videoLocalPath || thumbnailLocalPath)) {
+        throw new ApiError(400,"All files are not present")
+    }
+    const videoFile = await uploadOnCloudinary(videoLocalPath)
+    const thumbnail = await uploadOnCloudinary(thumbnailLocalPath)
+
+    if(!videoFile || !thumbnail) {
+        throw new ApiError(500,"Error in uploading files (Video/Thumbnail)")
+    }
+
+
+    // create video 
+    const video = new Video({
+        title,
+        description,
+        videoFile: videoFile.url,
+        thumbnail: thumbnail.url,
+        owner: req.user._conditions._id
+    })
 })
 
 const getVideoById = asyncHandler(async (req, res) => {
