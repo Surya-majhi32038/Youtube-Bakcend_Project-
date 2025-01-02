@@ -33,15 +33,25 @@ const deleteFromCloudinary = async (localFilePath) => {
         const match = url.match(regex);
         return match ? match[1] : null; // Return the captured public ID or null
     };
+    const determineMediaTypeFromUrl = (url) => {
+        if (url.includes("/image/upload/")) return "image";
+        if (url.includes("/video/upload/")) return "video";
+        return "unknown";
+    };
     try {
         const publicId = getPublicIdFromUrl(localFilePath);
         if (!publicId) {
             console.log("Invalid URL. Could not extract public ID.");
             return null;
         }
+        const resourceType = determineMediaTypeFromUrl(localFilePath);
+        if (!publicId) {
+            console.log("Invalid URL. Could not extract public ID.");
+            return null;
+        }
         // Delete the image from Cloudinary
-        const result = await cloudinary.uploader.destroy(publicId);
-        console.log("Deletion result:", result);
+        const result = await cloudinary.uploader.destroy(publicId,{resource_type:resourceType});
+      //  console.log("Deletion result:", result);
         return result;
     } catch (error) {
         console.error("Error deleting image from Cloudinary:", error.message);
