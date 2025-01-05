@@ -33,7 +33,7 @@ app.use("/api/v1/tweets", tweetRouter)
 app.use("/api/v1/subscriptions", subscriptionRouter)
 app.use("/api/v1/videos", videoRouter) // all routes are complete 
 app.use("/api/v1/comments", commentRouter)
-app.use("/api/v1/likes", likeRouter) // ongoing 
+app.use("/api/v1/likes", likeRouter) // done  
 app.use("/api/v1/playlist", playlistRouter)
 app.use("/api/v1/dashboard", dashboardRouter) 
 
