@@ -77,25 +77,64 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
             )
     } else {
         const newCommentLike = await Like.create({
-            video: videoId,
+            comment: commentId,
             likedBy: userId
         });
 
         res
             .status(200)
             .json(
-                new ApiResponse(200, "Successfully liked a video", newCommentLike)
+                new ApiResponse(200, "Successfully liked a comment", newCommentLike)
             )
 
     }
 
-})
+}) // done
 
 const toggleTweetLike = asyncHandler(async (req, res) => {
     const { tweetId } = req.params
     //TODO: toggle like on tweet
+
+
+    const userId = req.user._conditions._id;
+
+    if (!isValidObjectId(tweetId)) {
+        throw new ApiError(400, "video id is not a valid object id ");
+    }
+
+    if (!userId) {
+        throw new ApiError(400, "not get user id ")
+    }
+
+    const existTweetLike = await Like.findOne({
+        tweet: tweetId,
+        likedBy: userId
+    })
+
+    if (existTweetLike) {
+        //console.log(existVideoLike)
+        await existTweetLike.deleteOne();
+        res
+            .status(200)
+            .json(
+                new ApiResponse(200, "Tweet unliked successfully")
+            )
+    } else {
+        const newTweetLike = await Like.create({
+            tweet: tweetId,
+            likedBy: userId
+        });
+
+        res
+            .status(200)
+            .json(
+                new ApiResponse(200, "Successfully liked a tweet", newTweetLike)
+            )
+
+    }
+
 }
-)
+) // done
 
 const getLikedVideos = asyncHandler(async (req, res) => {
     //TODO: get all liked videos
