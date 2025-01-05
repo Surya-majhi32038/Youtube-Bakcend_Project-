@@ -8,8 +8,81 @@ import { deleteFromCloudinary, uploadOnCloudinary } from "../utils/cloudinary.js
 
 
 const getAllVideos = asyncHandler(async (req, res) => {
-    const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query
+    const { page = 1, limit = 10, query = "", sortBy = "createdAt", sortType = 1, userId = "" } = req.query
     //TODO: get all videos based on query, sort, pagination
+    const pageNumber = parseInt(page)
+    const limitNumber = parseInt(limit)
+    const skip = (pageNumber - 1) * limitNumber
+
+    const videos = await Video.aggregate([
+        {
+            $match: {
+                $or: [
+                    {
+                        title: {
+                            $regex: query,
+                            $options: "i"
+                        }
+                    },
+                    {
+                        description: {
+                            $regex: query,
+                            $options: "i"
+                        }
+                    },
+                    {
+                        owner: userId
+                    }
+                ]
+            }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "owner",
+                foreignField: "_id",
+                as: "owner",
+                pipeline: [
+                    {
+                        $project: {
+                            _id: 1,
+                            fullName: 1,
+                            avatar: 1,
+                            coverImage: 1,
+                        }
+                    }
+                ]
+
+            }
+        },
+
+        {
+            $unwind: "$owner"
+        },
+        {
+            $sort: {
+                [sortBy]: sortType === "asc" ? 1 : -1
+            }
+        },
+        {
+            $skip: skip
+        },
+        {
+            $limit: limitNumber
+        }
+    ])
+
+    if (!videos) {
+        throw new ApiError(404, "No video found")
+    }
+
+    res
+    .status(200)
+    .json(
+        new ApiResponse(200, videos, "Videos fetched successfully")
+    )
+
+
 })
 
 const publishAVideo = asyncHandler(async (req, res) => {
@@ -145,8 +218,8 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
                 isPublished: !video.isPublished
             }
         }, { new: true })
-    res.status(200).json( new ApiResponse(200, result, "Publish status updated successfully"))
-})
+    res.status(200).json(new ApiResponse(200, result, "Publish status updated successfully"))
+}) // done
 
 export {
     getAllVideos,
